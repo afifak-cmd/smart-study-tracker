@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart Study Planner</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#050507;
+color:white;
+min-height:100vh;
+}
+
+/* HEADER */
+.header{
+background:#1b1b2f;
+padding:20px;
+text-align:center;
+font-size:22px;
+}
+
+/* MENU BUTTON */
+.menuBtn{
+position:absolute;
+top:20px;
+left:20px;
+font-size:24px;
+cursor:pointer;
+}
+
+/* SIDEBAR */
+.sidebar{
+width:130px;
+background:#151523;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding-top:20px;
+gap:15px;
+position:fixed;
+left:-150px;
+top:0;
+height:100%;
+transition:0.3s;
+}
+
+.sidebar.show{
+left:0;
+}
+
+.tab{
+background:#23233a;
+padding:10px;
+border-radius:10px;
+cursor:pointer;
+width:90px;
+text-align:center;
+font-size:13px;
+}
+
+/* MAIN */
+.main{
+padding:40px;
+height:60vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* PAGES */
+.page{
+display:none;
+}
+
+.active{
+display:block;
+}
+
+/* CARD */
+.card{
+background:#1b1b2f;
+padding:20px;
+border-radius:15px;
+width:320px;
+}
+
+/* INPUT */
+input{
+width:94%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#2a2a45;
+color:white;
+}
+
+/* DEFAULT BUTTON (for Add) */
+button{
+margin-top:10px;
+padding:10px;
+width:100%;
+background:#6a5cff;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+}
+
+/* ✅ SMALL COMPLETE BUTTON */
+.completeBtn{
+padding:5px 12px;
+font-size:12px;
+width:auto;
+border-radius:20px;
+}
+
+/* LIST */
+#subjectList div,
+li{
+background:#23233a;
+padding:10px;
+margin-top:8px;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* HOME BUTTON */
+.homeArrow{
+position:fixed;
+bottom:20px;
+right:20px;
+height:55px;
+width:55px;
+background:#6a5cff;
+border-radius:12px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:26px;
+cursor:pointer;
+}
+
+/* PREVIOUS BUTTON */
+.prevArrow{
+position:fixed;
+bottom:20px;
+left:20px;
+height:55px;
+width:55px;
+background:#6a5cff;
+border-radius:12px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:26px;
+cursor:pointer;
+}
+
+/* CENTERED WELCOME PAGE */
+.container{
+text-align:center;
+width:100%;
+height:80vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+}
+
+.container h2{
+font-size:24px;
+margin-bottom:10px;
+}
+
+.container h1{
+font-size:42px;
+margin:0;
+}
+
+/* RAINBOW TEXT */
+.text-rainbow-animation{
+font-family:Arial Black;
+background-image:linear-gradient(to right,#ffffff,#6f3cff,#ffffff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+animation:rainbow-animation 6s linear infinite;
+}
+
+@keyframes rainbow-animation{
+to{
+background-position:400vh;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+Smart Study Planner
+</div>
+
+<div class="menuBtn" onclick="toggleMenu()">⋮</div>
+
+<!-- SIDEBAR -->
+<div id="menu" class="sidebar">
+<div class="tab" onclick="openPage('home'); toggleMenu()">Home</div>
+<div class="tab" onclick="openPage('task'); toggleMenu()">Task</div>
+<div class="tab" onclick="openPage('activity'); toggleMenu()">Activity</div>
+<div class="tab" onclick="openPage('progress'); toggleMenu()">Progress</div>
+</div>
+
+<div class="main">
+
+<!-- HOME PAGE -->
+<div id="home" class="page active">
+<div class="container">
+<h2>Welcome to</h2>
+<h1 class="text-rainbow-animation">Smart Study Plan Tracker</h1>
+</div>
+</div>
+
+<!-- TASK PAGE -->
+<div id="task" class="page">
+<div class="card">
+<h2>Task</h2>
+<input type="text" id="subjectInput" placeholder="Enter Subject">
+<button onclick="addSubject()">Add</button>
+<div id="subjectList"></div>
+</div>
+<div class="prevArrow" onclick="openPage('home')">←</div>
+</div>
+
+<!-- ACTIVITY -->
+<div id="activity" class="page">
+<div class="card">
+<h2>Activity</h2>
+<ul id="activityList"></ul>
+</div>
+<div class="prevArrow" onclick="openPage('task')">←</div>
+</div>
+
+<!-- PROGRESS -->
+<div id="progress" class="page">
+<div class="card">
+<h2>Progress</h2>
+<div id="progressSubjects"></div>
+<p><b>Completed Activities:</b> <span id="completedCount">0</span></p>
+<p><b>Pending Activities:</b> <span id="pendingCount">0</span></p>
+</div>
+<div class="prevArrow" onclick="openPage('activity')">←</div>
+</div>
+
+</div>
+
+<div class="homeArrow" onclick="openPage('home')">⌂</div>
+
+<script>
+let subjects = []
+let activities = {}
+let completed = []
+let expandedSubjects = {}
+
+function toggleMenu(){
+    document.getElementById("menu").classList.toggle("show")
+}
+
+function openPage(page){
+    let pages = document.querySelectorAll(".page")
+    pages.forEach(p => p.classList.remove("active"))
+    document.getElementById(page).classList.add("active")
+
+    if(page === "home"){
+        document.querySelector(".homeArrow").style.display = "none"
+        document.querySelectorAll(".prevArrow").forEach(b => b.style.display = "none")
+    } else {
+        document.querySelector(".homeArrow").style.display = "flex"
+        document.querySelectorAll(".prevArrow").forEach(b => b.style.display = "flex")
+    }
+
+    updateActivitySubjects()
+    updateProgress()
+}
+
+function addSubject(){
+    let input = document.getElementById("subjectInput")
+    let list = document.getElementById("subjectList")
+    if(input.value === "") return
+
+    let subject = input.value
+    subjects.push(subject)
+    activities[subject] = []
+
+    let div = document.createElement("div")
+    div.textContent = subject
+    list.appendChild(div)
+    input.value = ""
+
+    updateActivitySubjects()
+    updateProgress()
+}
+
+function updateActivitySubjects() {
+    let list = document.getElementById("activityList")
+    list.innerHTML = ""
+
+    subjects.forEach(subject => {
+        let li = document.createElement("li")
+        li.innerHTML = "<b>" + subject + "</b>"
+
+        let taskContainer = document.createElement("div")
+        taskContainer.style.marginLeft = "15px"
+
+        activities[subject].forEach(task => {
+            let sub = document.createElement("div")
+            sub.style.display = "flex"
+            sub.style.justifyContent = "space-between"
+            sub.style.alignItems = "center"
+            sub.style.marginTop = "5px"
+
+            let taskText = document.createElement("span")
+            taskText.textContent = task
+
+            let btn = document.createElement("button")
+            btn.classList.add("completeBtn")   // ✅ added
+            btn.textContent = completed.includes(task) ? "Done" : "Complete"
+            btn.style.background = completed.includes(task) ? "green" : "#6a5cff"
+
+            btn.addEventListener("click", function(e){
+                e.stopPropagation()
+                if(!completed.includes(task)){
+                    completed.push(task)
+                    updateActivitySubjects()
+                    updateProgress()
+                }
+            })
+
+            sub.appendChild(taskText)
+            sub.appendChild(btn)
+            taskContainer.appendChild(sub)
+        })
+
+        li.appendChild(taskContainer)
+        li.addEventListener("click", function(e){
+            if(e.target.tagName.toLowerCase() === "button") return
+            let task = prompt("Enter lesson/task for " + subject)
+            if(task){
+                activities[subject].push(task)
+                updateActivitySubjects()
+            }
+        })
+
+        list.appendChild(li)
+    })
+}
+
+function updateProgress(){
+    let progressDiv = document.getElementById("progressSubjects")
+    progressDiv.innerHTML = ""
+
+    if(subjects.length === 0){
+        progressDiv.innerText = "No subjects yet"
+        return
+    }
+
+    subjects.forEach(subject => {
+        let subDiv = document.createElement("div")
+        subDiv.style.marginBottom = "10px"
+        subDiv.style.background = "#23233a"
+        subDiv.style.padding = "8px"
+        subDiv.style.borderRadius = "5px"
+
+        let title = document.createElement("b")
+        title.innerText = subject
+        subDiv.appendChild(title)
+
+        subDiv.addEventListener("click", function(){
+            expandedSubjects[subject] = !expandedSubjects[subject]
+            updateProgress()
+        })
+
+        progressDiv.appendChild(subDiv)
+
+        if(expandedSubjects[subject]){
+            let taskContainer = document.createElement("div")
+            taskContainer.style.marginLeft = "10px"
+
+            activities[subject].forEach(task=>{
+                let t = document.createElement("div")
+                t.innerText = task + " - " + (completed.includes(task) ? "Completed" : "Pending")
+                t.style.color = completed.includes(task) ? "lightgreen" : "red"
+                taskContainer.appendChild(t)
+            })
+
+            progressDiv.appendChild(taskContainer)
+        }
+    })
+
+    let total = 0
+    for(let s in activities) total += activities[s].length
+    document.getElementById("completedCount").innerText = completed.length
+    document.getElementById("pendingCount").innerText = total - completed.length
+}
+</script>
+
+</body>
+  </html>
